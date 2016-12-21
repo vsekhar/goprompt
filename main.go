@@ -99,6 +99,7 @@ func main() {
 			line := string(scanner.Text())
 			if strings.HasPrefix(line, "?? ") {
 				untracked = true
+				continue
 			}
 			if line[0] != ' ' {
 				isPending = true
