@@ -90,6 +90,7 @@ func main() {
 		}
 		branch = strings.TrimPrefix(branch, "## ")
 		branch = strings.SplitN(branch, "...", 2)[0]
+		branch = strings.TrimSpace(branch)
 
 		scanner := bufio.NewScanner(reader)
 		untracked := false
@@ -123,7 +124,6 @@ func main() {
 		if untracked {
 			prompt += "+?"
 		}
-		prompt += "\x1b[0m"
 	}
 
 	// clear formatting for sure so we don't mess up the terminal
