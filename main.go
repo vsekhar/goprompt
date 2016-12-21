@@ -15,7 +15,7 @@ import (
 
 var debug = flag.Bool("debug", false, "debug mode")
 
-func DebugLogf(s string, v... interface{}) {
+func DebugLogf(s string, v ...interface{}) {
 	if *debug {
 		log.Printf(s, v...)
 	}
@@ -53,7 +53,7 @@ func main() {
 	for k, v := range collapsablePrefixes {
 		if strings.HasPrefix(displayPath, k) {
 			displayPath = v + strings.TrimPrefix(displayPath, k)
-		}	
+		}
 	}
 	prompt += displayPath
 
@@ -83,30 +83,41 @@ func main() {
 		if err := cmd.Start(); err != nil {
 			Fatal(err)
 		}
-		scanner := bufio.NewScanner(stdout)
-		branch := ""
-		isDirty := false
+		reader := bufio.NewReader(stdout)
+		branch, err := reader.ReadString('\n')
+		if err != nil {
+			Fatal(err)
+		}
+		branch = strings.TrimPrefix(branch, "## ")
+		branch = strings.SplitN(branch, "...", 2)[0]
+
+		scanner := bufio.NewScanner(reader)
 		untracked := false
+		isDirty := false   // work tree != index
+		isPending := false // index != HEAD
 		for scanner.Scan() {
-			if branch == "" {
-				branch = scanner.Text()
-				branch = strings.TrimPrefix(branch, "## ")
-				branch = strings.SplitN(branch, "...", 2)[0]
-				continue
-			}
-			if strings.HasPrefix(scanner.Text(), "?? ") {
+			line := string(scanner.Text())
+			if strings.HasPrefix(line, "?? ") {
 				untracked = true
+			}
+			if line[0] != ' ' {
+				isPending = true
+			}
+			if line[1] != ' ' {
 				isDirty = true
 			}
 		}
-		_ = isDirty
-		_ = untracked
 		prompt += ":"
-		if isDirty {
-			prompt += "\x1b[31;1m"
-		} else {
-			prompt += "\x1b[32;1m"
+		colorCode := ""
+		switch {
+		case isPending:
+			colorCode = "\x1b[33;1m" // yellow
+		case isDirty:
+			colorCode = "\x1b[31;1m" // red
+		default:
+			colorCode = "\x1b[32;1m" // green
 		}
+		prompt += colorCode
 		prompt += branch
 		if untracked {
 			prompt += "+?"
