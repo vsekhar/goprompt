@@ -58,9 +58,16 @@ func main() {
 	prompt += displayPath
 
 	// git
-	ccwd := cwd
 	isGit := false
+	ccwd := cwd
 	for {
+		if path.Base(ccwd) == ".git" {
+			DebugLogf("In git dir: %s", ccwd)
+			prompt += "\x1b[31;1m" // red
+			prompt += "[GIT DIR!]"
+			prompt += "\x1b[0m"
+			break
+		}
 		gitPath := path.Join(ccwd, ".git")
 		DebugLogf("Checking for %s", gitPath)
 		s, err := os.Stat(gitPath)
