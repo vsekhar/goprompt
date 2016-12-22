@@ -123,6 +123,8 @@ func main() {
 			colorCode = "\x1b[33;1m" // yellow
 		case isDirty:
 			colorCode = "\x1b[31;1m" // red
+		case untracked:
+			colorCode = "\x1b[31;1m" // red
 		default:
 			colorCode = "\x1b[32;1m" // green
 		}
