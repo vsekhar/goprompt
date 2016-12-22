@@ -13,6 +13,18 @@ import (
 	homedir "github.com/mitchellh/go-homedir"
 )
 
+const (
+	RESET = iota
+	BOLD
+)
+
+const (
+	BLACK = 30 + iota
+	RED
+	GREEN
+	YELLOW
+)
+
 var debug = flag.Bool("debug", false, "debug mode")
 
 func DebugLogf(s string, v ...interface{}) {
@@ -28,6 +40,18 @@ func Fatal(e error) {
 
 var collapsablePrefixes = map[string]string{
 	"~/Code/go/src/": "",
+}
+
+func colorCode(codes ...int) string {
+	ret := "\\[\x1b["
+	for i, c := range codes {
+		if i > 0 {
+			ret += ";"
+		}
+		ret += fmt.Sprintf("%d", c)
+	}
+	ret += "m\\]"
+	return ret
 }
 
 func main() {
@@ -117,18 +141,16 @@ func main() {
 			}
 		}
 		prompt += ":"
-		colorCode := ""
 		switch {
 		case isPending:
-			colorCode = "\x1b[33;1m" // yellow
-		case isDirty:
-			colorCode = "\x1b[31;1m" // red
+			prompt += colorCode(YELLOW, BOLD)
+		case isDirty, untracked:
+			prompt += colorCode(RED, BOLD)
 		case untracked:
-			colorCode = "\x1b[31;1m" // red
+			prompt += colorCode(RED, BOLD)
 		default:
-			colorCode = "\x1b[32;1m" // green
+			prompt += colorCode(GREEN, BOLD)
 		}
-		prompt += colorCode
 		prompt += branch
 		if untracked {
 			prompt += "+?"
@@ -136,7 +158,7 @@ func main() {
 	}
 
 	// clear formatting for sure so we don't mess up the terminal
-	prompt += "\x1b[0m"
+	prompt += colorCode(RESET)
 
 	fmt.Printf("%s", prompt)
 }
